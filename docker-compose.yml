@@ -32,6 +32,7 @@ services:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - static_volume:/static
       - media_volume:/media
+      - /etc/letsencrypt:/etc/letsencrypt:ro 
       - ./certbot/www:/var/www/certbot          # <-- nuevo
       - ./certbot/conf:/etc/nginx/ssl           # <-- nuevo
     command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
