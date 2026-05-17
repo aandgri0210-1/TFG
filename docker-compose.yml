@@ -5,11 +5,19 @@ services:
       - .env
     environment:
       DJANGO_DEBUG: "${DJANGO_DEBUG:-1}"
-      DB_ENGINE: "${DB_ENGINE:-sqlite3}"
+      DB_ENGINE: "${DB_ENGINE:-mysql}"
+      MYSQL_DATABASE: "${MYSQL_DATABASE}"
+      MYSQL_USER: "${MYSQL_USER}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "${MYSQL_PORT:-3306}"
     volumes:
       - .:/app
       - static_volume:/app/staticfiles
       - media_volume:/app/media
+    depends_on:
+      mysql:
+        condition: service_healthy
     expose:
       - "8000"
 
@@ -27,8 +35,7 @@ services:
 
   mysql:
     image: mysql:8.4
-    profiles:
-      - mysql
+    # Eliminado profiles: para que siempre se inicie
     environment:
       MYSQL_DATABASE: "${MYSQL_DATABASE}"
       MYSQL_USER: "${MYSQL_USER}"
@@ -38,6 +45,11 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 5
+      interval: 5s
 
 volumes:
   static_volume:

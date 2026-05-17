@@ -1,22 +1,24 @@
 FROM python:3.12-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PIP_NO_CACHE_DIR=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends build-essential default-libmysqlclient-dev curl \
+# Instalar dependencias del sistema (solo las necesarias para Pillow, etc.)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt /app/
-RUN pip install --upgrade pip && pip install -r requirements.txt
+# Copiar e instalar dependencias Python
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . /app/
+# Copiar todo el código
+COPY . .
 
-RUN chmod +x /app/entrypoint.sh
-
+# Exponer puerto
 EXPOSE 8000
 
-ENTRYPOINT ["/app/entrypoint.sh"]
+# Comando por defecto (puedes usar Gunicorn más adelante)
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
