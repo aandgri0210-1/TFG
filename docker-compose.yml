@@ -4,8 +4,8 @@ services:
     env_file:
       - .env
     environment:
-      DJANGO_DEBUG: "0"
-      DB_ENGINE: sqlite3
+      DJANGO_DEBUG: "${DJANGO_DEBUG:-1}"
+      DB_ENGINE: "${DB_ENGINE:-sqlite3}"
     volumes:
       - .:/app
       - static_volume:/app/staticfiles
