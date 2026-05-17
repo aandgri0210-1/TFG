@@ -92,17 +92,14 @@ DATABASES = {
     }
 }
 
-if os.getenv('DB_ENGINE', 'sqlite3') == 'mysql':
+if os.getenv('DB_ENGINE', 'sqlite3') == 'postgresql':
     DATABASES['default'] = {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('MYSQL_DATABASE', 'tfg_marketplace'),
-        'USER': os.getenv('MYSQL_USER', 'tfg_user'),
-        'PASSWORD': os.getenv('MYSQL_PASSWORD', 'tfg_password'),
-        'HOST': os.getenv('MYSQL_HOST', 'mysql'),
-        'PORT': os.getenv('MYSQL_PORT', '3306'),
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-        },
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('POSTGRES_DB', 'tfg_marketplace'),
+        'USER': os.getenv('POSTGRES_USER', 'tfg_user'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'tfg_password'),
+        'HOST': os.getenv('POSTGRES_HOST', 'postgres'),
+        'PORT': os.getenv('POSTGRES_PORT', '5432'),
     }
 
 

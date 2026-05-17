@@ -5,18 +5,18 @@ services:
       - .env
     environment:
       DJANGO_DEBUG: "${DJANGO_DEBUG:-1}"
-      DB_ENGINE: "${DB_ENGINE:-mysql}"
-      MYSQL_DATABASE: "${MYSQL_DATABASE}"
-      MYSQL_USER: "${MYSQL_USER}"
-      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
-      MYSQL_HOST: mysql
-      MYSQL_PORT: "${MYSQL_PORT:-3306}"
+      DB_ENGINE: "${DB_ENGINE:-postgresql}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "${POSTGRES_PORT:-5432}"
     volumes:
       - .:/app
       - static_volume:/app/staticfiles
       - media_volume:/app/media
     depends_on:
-      mysql:
+      postgres:
         condition: service_healthy
     expose:
       - "8000"
@@ -33,20 +33,18 @@ services:
       - static_volume:/static
       - media_volume:/media
 
-  mysql:
-    image: mysql:8.4
-    # Eliminado profiles: para que siempre se inicie
+  postgres:
+    image: postgres:16-alpine
     environment:
-      MYSQL_DATABASE: "${MYSQL_DATABASE}"
-      MYSQL_USER: "${MYSQL_USER}"
-      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
-      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       timeout: 10s
       retries: 5
       interval: 5s
@@ -54,4 +52,4 @@ services:
 volumes:
   static_volume:
   media_volume:
-  mysql_data:
+  postgres_data:
