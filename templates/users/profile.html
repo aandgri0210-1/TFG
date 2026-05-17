@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% block title %}Mi perfil | LocalMarket{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div>
+    <span class="eyebrow">Cuenta</span>
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+      <span class="avatar-circle avatar-circle--lg">
+        {% if profile_object.avatar %}
+        <img src="{{ profile_object.avatar.url }}" alt="Avatar de {{ user.get_full_name|default:user.username }}">
+        {% elif profile_object.avatar_url %}
+        <img src="{{ profile_object.avatar_url }}" alt="Avatar de {{ user.get_full_name|default:user.username }}">
+        {% else %}
+        <span>{{ user.username|slice:":1"|upper }}</span>
+        {% endif %}
+      </span>
+      <h1 class="display-title mb-0">{{ user.get_full_name|default:user.username }}</h1>
+    </div>
+    <p class="section-lead">Gestiona tu información personal y revisa tu actividad dentro del marketplace.</p>
+  </div>
+  <a class="btn btn-outline-light" href="{% url 'users:profile_edit' %}">Editar perfil</a>
+</div>
+
+<div class="row g-4 mt-1">
+  <div class="col-lg-8">
+    <div class="card-glass p-4 h-100">
+      <h2 class="h4 mb-4">Datos del perfil</h2>
+      <div class="profile-grid">
+        <div>
+          <span class="text-muted d-block">Email</span>
+          <strong>{{ user.email }}</strong>
+        </div>
+        <div>
+          <span class="text-muted d-block">Rol asignado</span>
+          <strong>{{ user.get_role_display }}</strong>
+        </div>
+        <div>
+          <span class="text-muted d-block">Teléfono</span>
+          <strong>{{ profile_object.phone|default:'No indicado' }}</strong>
+        </div>
+        <div>
+          <span class="text-muted d-block">Ciudad</span>
+          <strong>{{ profile_object.city|default:'No indicada' }}</strong>
+        </div>
+      </div>
+      <div class="mt-4">
+        <span class="text-muted d-block">Biografía</span>
+        <p class="mb-0">{{ profile_object.bio|default:'Añade una breve presentación para destacar tu perfil.' }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card-glass p-4 mb-4">
+      <span class="eyebrow">Actividad</span>
+      <div class="kpi-grid mt-3">
+        <div class="kpi-box"><strong>{{ service_count }}</strong><span>Servicios</span></div>
+        <div class="kpi-box"><strong>{{ request_count }}</strong><span>Solicitudes</span></div>
+        <div class="kpi-box"><strong>{{ review_count }}</strong><span>Valoraciones</span></div>
+      </div>
+    </div>
+    <div class="card-glass p-4">
+      <span class="eyebrow">Acciones rápidas</span>
+      <div class="d-grid gap-2 mt-3">
+        <a class="btn btn-primary" href="{% url 'services:service_list' %}">Explorar servicios</a>
+        <a class="btn btn-outline-light" href="{% url 'requests_app:request_history' %}">Ver solicitudes</a>
+        <a class="btn btn-outline-light" href="{% url 'users:profile_change_password' %}">Cambiar contraseña</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

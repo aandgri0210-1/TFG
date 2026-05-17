@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} | MotoMarket{% endblock %}
+{% block content %}
+<div class="section-header mb-4">
+  <span class="eyebrow">Anuncios</span>
+  <h1 class="section-title">{{ title }}</h1>
+</div>
+<div class="card-glass p-4">
+  <form method="post" enctype="multipart/form-data" class="row g-3" novalidate>
+    {% csrf_token %}
+    {% for hidden in form.hidden_fields %}
+      {{ hidden }}
+    {% endfor %}
+
+    <div class="col-md-6">
+      <label class="form-label" for="{{ form.category.id_for_label }}">{{ form.category.label }}</label>
+      {{ form.category }}
+      {% for error in form.category.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label" for="{{ form.listing_type.id_for_label }}">{{ form.listing_type.label }}</label>
+      {{ form.listing_type }}
+      {% for error in form.listing_type.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="col-12">
+      <label class="form-label" for="{{ form.title.id_for_label }}">{{ form.title.label }}</label>
+      {{ form.title }}
+      {% for error in form.title.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="col-12">
+      <label class="form-label" for="{{ form.multiple_images.id_for_label }}">{{ form.multiple_images.label }}</label>
+      {{ form.multiple_images }}
+      <div class="location-hint">{{ form.multiple_images.help_text }}</div>
+      {% if form.instance.pk and form.instance.service_images.all %}
+      <div class="mt-3">
+        <h6 class="mb-2">Imágenes actuales:</h6>
+        <div class="row g-2">
+          {% for service_image in form.instance.service_images.all %}
+          <div class="col-auto">
+            <img src="{{ service_image.image.url }}" alt="Imagen del anuncio" class="service-image-preview">
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+      {% for error in form.multiple_images.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="col-12">
+      <label class="form-label" for="{{ form.description.id_for_label }}">{{ form.description.label }}</label>
+      {{ form.description }}
+      {% for error in form.description.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="col-md-4 vehicle-field" data-vehicle-field>
+      <label class="form-label" for="{{ form.cilindrada.id_for_label }}">{{ form.cilindrada.label }}</label>
+      {{ form.cilindrada }}
+      {% for error in form.cilindrada.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="col-md-4 vehicle-field" data-vehicle-field>
+      <label class="form-label" for="{{ form.kilometros.id_for_label }}">{{ form.kilometros.label }}</label>
+      {{ form.kilometros }}
+      {% for error in form.kilometros.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="col-md-4 vehicle-field" data-vehicle-field>
+      <label class="form-label" for="{{ form.year.id_for_label }}">{{ form.year.label }}</label>
+      {{ form.year }}
+      {% for error in form.year.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="col-12">
+      <label class="form-label" for="{{ form.city_query.id_for_label }}">{{ form.city_query.label }}</label>
+      <div class="d-flex gap-2 align-items-start">
+        {{ form.city_query }}
+        <button type="button" class="btn btn-outline-light btn-sm" data-use-current-location title="Usar mi ubicación">Ubicación actual</button>
+      </div>
+      <div class="location-hint">Escribe para buscar una localidad de España y selecciona una de la lista. También puedes usar "Ubicación actual" para escoger la ciudad donde te encuentras.</div>
+      <div class="location-results" data-location-results></div>
+      {% for error in form.city_query.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+
+    <div class="col-12">
+      <label class="form-label" for="{{ form.price_from.id_for_label }}">{{ form.price_from.label }}</label>
+      {{ form.price_from }}
+      {% for error in form.price_from.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+    </div>
+
+
+    <div class="col-12 d-flex gap-2">
+      <button class="btn btn-primary" type="submit">Guardar</button>
+      <a class="btn btn-outline-light" href="{% url 'services:service_list' %}">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

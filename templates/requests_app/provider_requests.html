@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}Panel profesional | LocalMarket{% endblock %}
+{% block content %}
+<div class="section-header mb-4">
+  <span class="eyebrow">Profesionales</span>
+  <h1 class="section-title">Solicitudes entrantes</h1>
+</div>
+<div class="card-glass p-4">
+  <div class="table-responsive">
+    <table class="requests-table table table-dark table-borderless align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Servicio</th>
+          <th>Estado</th>
+          <th>Fecha deseada</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for request_item in provider_requests_list %}
+        <!-- Mobile summary row -->
+        <tr class="d-md-none">
+          <td colspan="5" class="p-0">
+            <div class="request-summary d-flex align-items-center gap-2" role="button" data-bs-toggle="collapse" data-bs-target="#request-{{ request_item.pk }}" aria-expanded="false">
+              <span class="text-muted small">#{{ request_item.pk }}</span>
+              <div class="flex-grow-1">
+                <strong class="text-white">{{ request_item.customer.get_full_name|default:request_item.customer.username }}</strong>
+                <div class="text-muted small">{{ request_item.service.title }}</div>
+              </div>
+              <svg class="chev" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+          </td>
+        </tr>
+        <!-- Mobile detail row (collapsed) -->
+        <tr class="d-md-none">
+          <td colspan="5" class="p-0">
+            <div class="collapse" id="request-{{ request_item.pk }}">
+              <div class="p-3 bg-dark border rounded mt-2">
+                <div class="mb-3">
+                  <small class="text-muted d-block">Estado</small>
+                  <span class="badge text-bg-info">{{ request_item.get_status_display }}</span>
+                </div>
+                <div class="mb-3">
+                  <small class="text-muted d-block">Fecha deseada</small>
+                  <span class="text-white">{{ request_item.desired_date|default:'Sin fecha' }}</span>
+                </div>
+                <div class="d-grid gap-2">
+                  {% if request_item.status == 'pending' %}
+                  <form method="post" action="{% url 'requests_app:provider_request_update' request_item.pk 'accept' %}" class="w-100">
+                    {% csrf_token %}
+                    <button class="btn btn-success w-100" type="submit">Aceptar</button>
+                  </form>
+                  {% endif %}
+                  {% if request_item.status == 'accepted' %}
+                  <form method="post" action="{% url 'requests_app:provider_request_update' request_item.pk 'complete' %}" class="w-100">
+                    {% csrf_token %}
+                    <button class="btn btn-primary w-100" type="submit">Completar</button>
+                  </form>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </td>
+        </tr>
+        <!-- Desktop table row -->
+        <tr class="d-none d-md-table-row">
+          <td>{{ request_item.customer.get_full_name|default:request_item.customer.username }}</td>
+          <td>{{ request_item.service.title }}</td>
+          <td><span class="badge text-bg-info">{{ request_item.get_status_display }}</span></td>
+          <td>{{ request_item.desired_date|default:'Sin fecha' }}</td>
+          <td class="text-end">
+            {% if request_item.status == 'pending' %}
+            <form method="post" action="{% url 'requests_app:provider_request_update' request_item.pk 'accept' %}" class="d-inline">
+              {% csrf_token %}
+              <button class="btn btn-sm btn-success" type="submit">Aceptar</button>
+            </form>
+            {% endif %}
+            {% if request_item.status == 'accepted' %}
+            <form method="post" action="{% url 'requests_app:provider_request_update' request_item.pk 'complete' %}" class="d-inline">
+              {% csrf_token %}
+              <button class="btn btn-sm btn-primary" type="submit">Completar</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="text-center py-4">No hay solicitudes para tus servicios.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

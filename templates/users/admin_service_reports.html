@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Incidencias de anuncios | MotoMarket{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div>
+    <span class="eyebrow">Administración</span>
+    <h1 class="display-title">Incidencias - Reportes de anuncios</h1>
+    <p class="section-lead">Gestiona los reportes de anuncios enviados por los usuarios.</p>
+  </div>
+</div>
+
+<div class="row mb-3">
+  <div class="col-12 col-md-4 mb-2 mb-md-0">
+    <div class="kpi-box p-3 w-100 text-center">
+      <strong>{{ total_reports }}</strong>
+      <div class="small text-muted">Totales</div>
+    </div>
+  </div>
+  <div class="col-12 col-md-4 mb-2 mb-md-0">
+    <div class="kpi-box p-3 w-100 text-center">
+      <strong>{{ pending_reports }}</strong>
+      <div class="small text-muted">Pendientes</div>
+    </div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="kpi-box p-3 w-100 text-center">
+      <strong>{{ resolved_reports }}</strong>
+      <div class="small text-muted">Resueltos</div>
+    </div>
+  </div>
+</div>
+
+<div class="card-glass p-4 mb-4">
+  <h2 class="h4 mb-3">Filtrar reportes</h2>
+  <form method="get" class="row g-3 align-items-end mb-3">
+    <div class="col-md-4">
+      <label class="form-label" for="q">Buscar</label>
+      <input type="text" id="q" name="q" class="form-control" value="{{ search_query }}" placeholder="Anuncio, usuario, reportero...">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label" for="status">Estado</label>
+      <select id="status" name="status" class="form-select">
+        <option value="" {% if not status_filter %}selected{% endif %}>Todos</option>
+        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pendientes</option>
+        <option value="resolved" {% if status_filter == 'resolved' %}selected{% endif %}>Resueltos</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label" for="reason">Motivo</label>
+      <select id="reason" name="reason" class="form-select">
+        <option value="" {% if not reason_filter %}selected{% endif %}>Todos</option>
+        {% for value, label in reason_choices %}
+        <option value="{{ value }}" {% if reason_filter == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2 d-grid">
+      <button class="btn btn-primary" type="submit">Filtrar</button>
+    </div>
+  </form>
+
+  <div class="list-reports">
+    {% for report in reports %}
+      {% include 'users/_report_item.html' with report=report object_type='service' %}
+    {% empty %}
+    <div class="card-glass p-5 text-center">
+      <p class="text-muted mb-0">No hay reportes.</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

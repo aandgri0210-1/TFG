@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Mis anuncios | MotoMarket{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div>
+    <span class="eyebrow">Gestión</span>
+    <h1 class="display-title">Mis anuncios</h1>
+    <p class="section-lead">Aquí puedes ver, editar y gestionar todos tus anuncios publicados.</p>
+  </div>
+  <a class="btn btn-primary" href="{% url 'services:service_create' %}">Publicar nuevo anuncio</a>
+</div>
+
+<div class="card-glass p-4 mb-4">
+  <form method="get" class="row g-3 align-items-end">
+    <div class="col-md-5">
+      <label class="form-label" for="id_category">Categoría</label>
+      {{ filter_form.category }}
+    </div>
+    <div class="col-md-5">
+      <label class="form-label" for="id_city">Ciudad</label>
+      {{ filter_form.city }}
+    </div>
+    <div class="col-md-2 d-grid">
+      <button class="btn btn-outline-light" type="submit">Filtrar</button>
+    </div>
+  </form>
+</div>
+
+<div class="row g-4">
+  {% for service in services %}
+  <div class="col-md-6 col-xl-4">
+    <article class="service-card card-glass h-100">
+      <div class="service-card__image-wrap">
+        {% if service.service_images.all %}
+        <img class="service-card__image" src="{{ service.service_images.first.image.url }}" alt="Imagen de {{ service.title }}">
+        {% elif service.image %}
+        <img class="service-card__image" src="{{ service.image.url }}" alt="Imagen de {{ service.title }}">
+        {% else %}
+        <div class="service-card__image service-card__image--empty"></div>
+        {% endif %}
+      </div>
+      <div class="service-card__meta">
+        <span class="badge text-bg-dark">{{ service.category.name }}</span>
+        <span class="badge text-bg-secondary">{{ service.get_listing_type_display }}</span>
+        <span class="text-muted small">{{ service.city }}</span>
+      </div>
+      <h2 class="h4 mt-3">{{ service.title }}</h2>
+      <p class="text-muted service-card__description">{{ service.description|truncatewords:22 }}</p>
+      <div class="service-card__owner">
+        <span class="avatar-circle avatar-circle--sm">
+          {% if service.professional.profile.avatar %}
+          <img src="{{ service.professional.profile.avatar.url }}" alt="Avatar de {{ service.professional.get_full_name|default:service.professional.username }}">
+          {% elif service.professional.profile.avatar_url %}
+          <img src="{{ service.professional.profile.avatar_url }}" alt="Avatar de {{ service.professional.get_full_name|default:service.professional.username }}">
+          {% else %}
+          <span>{{ service.professional.username|slice:":1"|upper }}</span>
+          {% endif %}
+        </span>
+        <div>
+          <small class="text-muted d-block">Publicado por</small>
+          <strong>{{ service.professional.get_full_name|default:service.professional.username }}</strong>
+        </div>
+      </div>
+      <div class="service-card__footer">
+        <strong>Desde {{ service.price_from }} €</strong>
+        <div class="d-flex gap-2 flex-wrap justify-content-end">
+          <a class="btn btn-sm btn-primary" href="{% url 'services:service_detail' service.pk %}">Ver detalle</a>
+          <a class="btn btn-sm btn-outline-light" href="{% url 'services:service_edit' service.pk %}">Editar</a>
+          <a class="btn btn-sm btn-danger" href="{% url 'services:service_delete' service.pk %}">Borrar</a>
+        </div>
+      </div>
+    </article>
+  </div>
+  {% empty %}
+  <div class="col-12">
+    <div class="card-glass p-5 text-center">
+      <h2 class="h4">No tienes anuncios publicados</h2>
+      <p class="mb-0"><a href="{% url 'services:service_create' %}">Publica tu primer anuncio</a> para comenzar a ofertar servicios.</p>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

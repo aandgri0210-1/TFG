@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% block title %}Incidencias | MotoMarket{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div>
+    <span class="eyebrow">Administración</span>
+    <h1 class="display-title">Incidencias - Reportes de reseñas</h1>
+    <p class="section-lead">Gestiona los reportes de reseñas inapropiadas enviados por los usuarios.</p>
+  </div>
+</div>
+
+<div class="row mb-3">
+  <div class="col-12 col-md-4 mb-2 mb-md-0">
+    <div class="kpi-box p-3 w-100 text-center">
+      <strong>{{ total_reports }}</strong>
+      <div class="small text-muted">Totales</div>
+    </div>
+  </div>
+  <div class="col-12 col-md-4 mb-2 mb-md-0">
+    <div class="kpi-box p-3 w-100 text-center">
+      <strong>{{ pending_reports }}</strong>
+      <div class="small text-muted">Pendientes</div>
+    </div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="kpi-box p-3 w-100 text-center">
+      <strong>{{ resolved_reports }}</strong>
+      <div class="small text-muted">Resueltos</div>
+    </div>
+  </div>
+</div>
+
+<div class="card-glass p-4 mb-4">
+  <h2 class="h4 mb-3">Filtrar reportes</h2>
+  <form method="get" class="row g-3 align-items-end mb-3">
+    <div class="col-md-4">
+      <label class="form-label" for="q">Buscar</label>
+      <input type="text" id="q" name="q" class="form-control" value="{{ search_query }}" placeholder="Reseña, usuario, reportero...">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label" for="status">Estado</label>
+      <select id="status" name="status" class="form-select">
+        <option value="" {% if not status_filter %}selected{% endif %}>Todos</option>
+        <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pendientes</option>
+        <option value="resolved" {% if status_filter == 'resolved' %}selected{% endif %}>Resueltos</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label" for="reason">Motivo</label>
+      <select id="reason" name="reason" class="form-select">
+        <option value="" {% if not reason_filter %}selected{% endif %}>Todos</option>
+        {% for value, label in reason_choices %}
+        <option value="{{ value }}" {% if reason_filter == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2 d-grid">
+      <button class="btn btn-primary" type="submit">Filtrar</button>
+    </div>
+  </form>
+
+  <div class="list-reports">
+    {% for report in reports %}
+      {% include 'users/_report_item.html' with report=report object_type='review' %}
+    {% empty %}
+    <div class="card-glass p-5 text-center">
+      <p class="text-muted mb-0">No hay reportes.</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Modales - Fuera de los reportes para abrir en el centro de la pantalla -->
+{% for report in reports %}
+<!-- Modal con detalle del reporte -->
+<div class="modal fade" id="reportModal{{ report.pk }}" tabindex="-1" aria-labelledby="reportModalLabel{{ report.pk }}" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="reportModalLabel{{ report.pk }}">Detalle del Reporte #{{ report.pk }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-4">
+              <h6 class="text-muted mb-2">Información del Reporte</h6>
+              <div class="p-3 rounded mb-3 modal-info-box">
+                <p class="mb-2"><strong>Estado:</strong> 
+                  {% if report.review.is_deleted %}
+                  <span class="badge text-bg-warning">Eliminado</span>
+                  {% endif %}
+                  {% if report.is_resolved %}
+                  <span class="badge text-bg-success">Resuelto</span>
+                  {% else %}
+                  <span class="badge text-bg-danger">Pendiente</span>
+                  {% endif %}
+                </p>
+                <p class="mb-2"><strong>Reportero:</strong> {{ report.reporter.get_full_name|default:report.reporter.username }} (@{{ report.reporter.username }})</p>
+                <p class="mb-2"><strong>Motivo:</strong> <span class="badge text-bg-warning">{{ report.get_reason_display }}</span></p>
+                <p class="mb-0"><strong>Fecha del reporte:</strong> {{ report.created_at|date:"d/m/Y H:i" }}</p>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <h6 class="text-muted mb-2">Reseña Reportada</h6>
+              <div class="p-3 rounded modal-info-box">
+                {% if report.review.is_deleted %}
+                <p class="text-warning mb-0"><strong>Esta reseña fue eliminada</strong></p>
+                {% else %}
+                <p class="mb-2"><strong>{{ report.review.title }}</strong></p>
+                <p class="mb-2">
+                  <span class="badge text-bg-info">{{ report.review.rating }}/5 ⭐</span>
+                  <strong class="ms-2">{{ report.review.reviewer.get_full_name|default:report.review.reviewer.username }}</strong>
+                </p>
+                <p class="mb-2 text-muted small">Publicada: {{ report.review.created_at|date:"d/m/Y H:i" }}</p>
+                <div class="border-top pt-3">
+                  <p class="mb-0">{{ report.review.comment }}</p>
+                </div>
+                {% endif %}
+              </div>
+            </div>
+
+            {% if report.description %}
+            <div class="mb-4">
+              <h6 class="text-muted mb-2">Descripción del Reporte</h6>
+              <div class="p-3 rounded modal-info-box">
+                <p class="mb-0">{{ report.description }}</p>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+            {% if not report.is_resolved %}
+            <form method="post" action="{% url 'users:admin_report_resolve' report.pk %}" class="d-inline">{% csrf_token %}
+              <button class="btn btn-success" type="submit">Marcar resuelto</button>
+            </form>
+            {% if not report.review.is_deleted %}
+            <form method="post" action="{% url 'users:admin_report_delete_review' report.pk %}" class="d-inline" onsubmit="return confirm('¿Eliminar esta reseña? Esta acción no se puede deshacer.');">{% csrf_token %}
+              <button class="btn btn-danger" type="submit">Eliminar reseña</button>
+            </form>
+            {% endif %}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+{% endblock %}

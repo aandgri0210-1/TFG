@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}Reportar anuncio | MotoMarket{% endblock %}
+{% block content %}
+<div class="section-header mb-4">
+  <span class="eyebrow">Reportes</span>
+  <h1 class="section-title">Reportar anuncio inapropiado</h1>
+  <p class="section-lead">Ayúdanos a mantener la comunidad segura reportando anuncios inapropiados.</p>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card-glass p-4 mb-4">
+      <h2 class="h5 mb-3">Anuncio reportado</h2>
+      <article class="mb-4 pb-4 border-bottom">
+        <div class="d-flex justify-content-between gap-3 flex-wrap">
+          <strong>{{ service.title }}</strong>
+          <span class="badge text-bg-info">{{ service.get_listing_type_display }}</span>
+        </div>
+        <p class="mb-0 mt-2 text-muted">{{ service.description|truncatechars:200 }}</p>
+        <small class="d-block mt-2 text-muted">Por {{ service.professional.get_full_name|default:service.professional.username }}</small>
+        <small class="d-block text-muted">{{ service.city }}</small>
+      </article>
+
+      <form method="post" class="row g-3" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
+        <div class="col-12">
+          <div class="alert alert-danger" role="alert">
+            {{ form.non_field_errors }}
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="col-12">
+          <label class="form-label" for="id_reason">{{ form.reason.label }}</label>
+          {{ form.reason }}
+          {% if form.reason.errors %}
+          <div class="invalid-feedback d-block mt-2" role="alert">
+            {% for error in form.reason.errors %}
+              <span>{{ error }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% if form.reason.help_text %}
+          <small class="form-text text-muted d-block mt-1">{{ form.reason.help_text }}</small>
+          {% endif %}
+        </div>
+
+        <div class="col-12">
+          <label class="form-label" for="id_description">{{ form.description.label }}</label>
+          {{ form.description }}
+          {% if form.description.errors %}
+          <div class="invalid-feedback d-block mt-2" role="alert">
+            {% for error in form.description.errors %}
+              <span>{{ error }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+          {% if form.description.help_text %}
+          <small class="form-text text-muted d-block mt-1">{{ form.description.help_text }}</small>
+          {% endif %}
+        </div>
+
+        <div class="col-12 d-flex gap-2">
+          <button class="btn btn-primary" type="submit">Enviar reporte</button>
+          <a class="btn btn-outline-light" href="{% url 'services:service_detail' service.pk %}">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

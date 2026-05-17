@@ -1,0 +1,298 @@
+{% extends 'base.html' %}
+{% block title %}Panel admin | MotoMarket{% endblock %}
+{% block content %}
+<div class="page-hero">
+  <div>
+    <span class="eyebrow">Administración</span>
+    <h1 class="display-title">Control del marketplace</h1>
+    <p class="section-lead">Gestiona usuarios, anuncios, categorías, tipos de anuncio e incidencias.</p>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-md-3"><div class="kpi-box h-100"><strong>{{ total_users }}</strong><span>Total usuarios</span></div></div>
+  <div class="col-md-3"><div class="kpi-box h-100"><strong>{{ active_users }}</strong><span>Activos</span></div></div>
+  <div class="col-md-3"><div class="kpi-box h-100"><strong>{{ professional_users }}</strong><span>Profesionales</span></div></div>
+  <div class="col-md-3">
+    <div class="d-flex flex-column gap-2">
+      <div class="kpi-box h-100 position-relative kpi-clickable{% if pending_reports > 0 %} kpi-box--alert{% endif %}" data-href="{% url 'users:admin_review_reports' %}"><strong>{{ total_reports }}</strong><span>Incidencias</span>{% if pending_reports > 0 %}<span class="notification-badge">{% if pending_reports > 99 %}+99{% else %}{{ pending_reports }}{% endif %}</span>{% endif %}</div>
+      <div class="kpi-box h-100 position-relative kpi-clickable{% if pending_service_reports > 0 %} kpi-box--alert{% endif %}" data-href="{% url 'users:admin_service_reports' %}"><strong>{{ total_service_reports }}</strong><span>Incidencias anuncios</span>{% if pending_service_reports > 0 %}<span class="notification-badge">{% if pending_service_reports > 99 %}+99{% else %}{{ pending_service_reports }}{% endif %}</span>{% endif %}</div>
+    </div>
+  </div>
+</div>
+
+<div class="card-glass p-4 mb-4">
+  <h2 class="h4 mb-3">Gestión de usuarios</h2>
+  <form method="get" class="row g-3 align-items-end mb-3">
+    <div class="col-md-5">
+      <label class="form-label" for="q">Buscar</label>
+      <input type="text" id="q" name="q" class="form-control" value="{{ search_query }}" placeholder="Nombre, email, teléfono...">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label" for="role">Rol</label>
+      <select id="role" name="role" class="form-select">
+        <option value="" {% if not role_filter %}selected{% endif %}>Todos</option>
+        <option value="customer" {% if role_filter == 'customer' %}selected{% endif %}>Cliente</option>
+        <option value="professional" {% if role_filter == 'professional' %}selected{% endif %}>Profesional</option>
+        <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Administrador</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label" for="status">Estado</label>
+      <select id="status" name="status" class="form-select">
+        <option value="" {% if not status_filter %}selected{% endif %}>Todos</option>
+        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Activos</option>
+        <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Inactivos</option>
+      </select>
+    </div>
+    <div class="col-md-1 d-grid">
+      <button class="btn btn-primary" type="submit">Filtrar</button>
+    </div>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table table-borderless align-middle users-table mb-0">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Usuario</th>
+          <th>Email</th>
+          <th>Rol</th>
+          <th>Teléfono</th>
+          <th>Estado</th>
+          <th class="text-end">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user_item in users %}
+        <!-- Desktop row (visible md+) -->
+        <tr class="d-none d-md-table-row">
+          <td><span class="text-muted small">#{{ user_item.pk }}</span></td>
+          <td><strong>{{ user_item.get_full_name|default:user_item.username }}</strong><br><span class="text-muted small">@{{ user_item.username }}</span></td>
+          <td>{{ user_item.email }}</td>
+          <td><span class="badge text-bg-secondary">{{ user_item.get_role_display }}</span></td>
+          <td>{{ user_item.profile.phone|default:'-' }}</td>
+          <td>{% if user_item.is_active %}<span class="badge text-bg-success">Activo</span>{% else %}<span class="badge text-bg-warning">Deshabilitado</span>{% endif %}</td>
+          <td class="text-end">
+            <div class="d-flex justify-content-end gap-2 flex-wrap">
+              <a class="btn btn-sm btn-outline-light" href="{% url 'users:admin_user_edit' user_item.pk %}">Editar</a>
+              <form method="post" action="{% url 'users:admin_user_reset_password' user_item.pk %}" class="d-inline">{% csrf_token %}
+                <button class="btn btn-sm btn-info" type="submit">Restablecer contraseña</button>
+              </form>
+              <form method="post" action="{% url 'users:admin_user_toggle' user_item.pk %}" class="d-inline">{% csrf_token %}
+                {% if user_item.is_active %}<button class="btn btn-sm btn-warning" type="submit">Deshabilitar</button>{% else %}<button class="btn btn-sm btn-success" type="submit">Habilitar</button>{% endif %}
+              </form>
+              <form method="post" action="{% url 'users:admin_user_delete' user_item.pk %}" class="d-inline" onsubmit="return confirm('¿Seguro que quieres borrar este usuario?');">{% csrf_token %}
+                <button class="btn btn-sm btn-danger" type="submit">Borrar</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Mobile: compact summary (visible only on small screens) -->
+        <tr class="d-md-none">
+          <td colspan="7" class="p-0 border-0">
+            <div
+              class="user-summary-card d-flex align-items-center justify-content-between"
+              role="button"
+              tabindex="0"
+              data-bs-toggle="collapse"
+              data-bs-target="#user-details-{{ user_item.pk }}"
+              aria-expanded="false"
+              aria-controls="user-details-{{ user_item.pk }}"
+            >
+              <div class="me-2">
+                <div class="text-muted small">#{{ user_item.pk }}</div>
+              </div>
+              <div class="flex-grow-1 me-2">
+                <strong class="d-block text-truncate">{{ user_item.get_full_name|default:user_item.username }}</strong>
+                <div class="text-muted small">{{ user_item.get_role_display }}</div>
+              </div>
+              <div class="ms-auto">
+                <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="#b6c5db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Mobile: collapsible details -->
+        <tr class="d-md-none">
+          <td colspan="7" class="p-0 border-0">
+            <div class="collapse" id="user-details-{{ user_item.pk }}">
+              <div class="p-3 border rounded bg-dark mt-2">
+                <div class="mb-2"><strong>Email:</strong> {{ user_item.email }}</div>
+                <div class="mb-2"><strong>Teléfono:</strong> {{ user_item.profile.phone|default:'-' }}</div>
+                <div class="mb-3"><strong>Estado:</strong> {% if user_item.is_active %}Activo{% else %}Deshabilitado{% endif %}</div>
+                <div class="d-flex flex-column gap-2">
+                  <a class="btn btn-sm btn-outline-light" href="{% url 'users:admin_user_edit' user_item.pk %}">Editar</a>
+                  <form method="post" action="{% url 'users:admin_user_reset_password' user_item.pk %}">{% csrf_token %}
+                    <button class="btn btn-sm btn-info" type="submit">Restablecer contraseña</button>
+                  </form>
+                  <form method="post" action="{% url 'users:admin_user_toggle' user_item.pk %}">{% csrf_token %}
+                    {% if user_item.is_active %}<button class="btn btn-sm btn-warning" type="submit">Deshabilitar</button>{% else %}<button class="btn btn-sm btn-success" type="submit">Habilitar</button>{% endif %}
+                  </form>
+                  <form method="post" action="{% url 'users:admin_user_delete' user_item.pk %}" onsubmit="return confirm('¿Seguro que quieres borrar este usuario?');">{% csrf_token %}
+                    <button class="btn btn-sm btn-danger" type="submit">Borrar</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7" class="text-center py-4">No se encontraron usuarios.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <div class="col-lg-6">
+    <div class="card-glass p-4 h-100">
+      <h2 class="h4 mb-3">Categorías</h2>
+      <form method="post" action="{% url 'users:admin_category_create' %}" class="row g-2 mb-3">
+        {% csrf_token %}
+        <div class="col-md-5"><input name="name" class="form-control" placeholder="Nombre categoría" required></div>
+        <div class="col-md-5"><input name="description" class="form-control" placeholder="Descripción (opcional)"></div>
+        <div class="col-md-2 d-grid"><button class="btn btn-primary" type="submit">Crear</button></div>
+      </form>
+      <div class="table-responsive">
+        <table class="table table-borderless align-middle mb-0">
+          <thead><tr><th>ID</th><th>Nombre</th><th>Slug</th><th class="text-end">Acciones</th></tr></thead>
+          <tbody>
+            {% for category in categories %}
+            <tr>
+              <td><span class="text-muted small">#{{ category.pk }}</span></td>
+              <td>{{ category.name }}</td>
+              <td><span class="text-muted">{{ category.slug }}</span></td>
+              <td class="text-end">
+                <form method="post" action="{% url 'users:admin_category_delete' category.pk %}" class="d-inline" onsubmit="return confirm('¿Eliminar categoría?');">{% csrf_token %}
+                  <button class="btn btn-sm btn-danger" type="submit">Borrar</button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center py-3">No hay categorías.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card-glass p-4 h-100">
+      <h2 class="h4 mb-3">Tipos de anuncio</h2>
+      <form method="post" action="{% url 'users:admin_listing_type_create' %}" class="row g-2 mb-3">
+        {% csrf_token %}
+        <div class="col-md-9"><input name="name" class="form-control" placeholder="Nombre tipo de anuncio" required></div>
+        <div class="col-md-3 d-grid"><button class="btn btn-primary" type="submit">Crear</button></div>
+      </form>
+      <div class="table-responsive">
+        <table class="table table-borderless align-middle mb-0">
+          <thead><tr><th>ID</th><th>Nombre</th><th>Slug</th><th class="text-end">Acciones</th></tr></thead>
+          <tbody>
+            {% for listing_type in listing_types %}
+            <tr>
+              <td><span class="text-muted small">#{{ listing_type.pk }}</span></td>
+              <td>{{ listing_type.name }}</td>
+              <td><span class="text-muted">{{ listing_type.slug }}</span></td>
+              <td class="text-end">
+                <form method="post" action="{% url 'users:admin_listing_type_delete' listing_type.pk %}" class="d-inline" onsubmit="return confirm('¿Eliminar tipo de anuncio?');">{% csrf_token %}
+                  <button class="btn btn-sm btn-danger" type="submit">Borrar</button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="text-center py-3">No hay tipos de anuncio.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card-glass p-4 mb-4">
+  <h2 class="h4 mb-3">Anuncios recientes</h2>
+  <div class="table-responsive">
+    <table class="table table-borderless align-middle mb-0 services-table">
+      <thead><tr><th>ID</th><th>Anuncio</th><th>Profesional</th><th>Categoría</th><th>Tipo</th><th class="text-end">Acciones</th></tr></thead>
+      <tbody>
+        {% for service in services %}
+        <!-- Desktop row -->
+        <tr class="d-none d-md-table-row">
+          <td><span class="text-muted small">#{{ service.pk }}</span></td>
+          <td><strong>{{ service.title }}</strong><br><span class="text-muted small">{{ service.city }}</span></td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <span class="avatar-circle avatar-circle--sm">
+                {% if service.professional.profile.avatar %}
+                <img src="{{ service.professional.profile.avatar.url }}" alt="Avatar de {{ service.professional.get_full_name|default:service.professional.username }}">
+                {% elif service.professional.profile.avatar_url %}
+                <img src="{{ service.professional.profile.avatar_url }}" alt="Avatar de {{ service.professional.get_full_name|default:service.professional.username }}">
+                {% else %}
+                <span>{{ service.professional.username|slice:":1"|upper }}</span>
+                {% endif %}
+              </span>
+              <span>{{ service.professional.get_full_name|default:service.professional.username }}</span>
+            </div>
+          </td>
+          <td>{{ service.category.name }}</td>
+          <td>{{ service.listing_type }}</td>
+          <td class="text-end">
+            <form method="post" action="{% url 'users:admin_service_delete' service.pk %}" class="d-inline" onsubmit="return confirm('¿Borrar anuncio?');">{% csrf_token %}
+              <button class="btn btn-sm btn-danger" type="submit">Borrar anuncio</button>
+            </form>
+          </td>
+        </tr>
+        <!-- Mobile summary -->
+        <tr class="d-md-none">
+          <td colspan="6" class="p-0 border-0">
+            <div class="service-summary d-flex align-items-center gap-2" role="button" data-bs-toggle="collapse" data-bs-target="#service-{{ service.pk }}" aria-expanded="false">
+              <div><span class="text-muted small">#{{ service.pk }}</span></div>
+              <div class="flex-grow-1">
+                <strong class="d-block mb-0">{{ service.title }}</strong>
+              </div>
+              <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 9l6 6 6-6" stroke="#b6c5db" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </td>
+        </tr>
+        <!-- Mobile details -->
+        <tr class="d-md-none">
+          <td colspan="6" class="p-0 border-0">
+            <div class="collapse" id="service-{{ service.pk }}">
+              <div class="p-3 bg-dark border rounded mt-2">
+                <div class="mb-2"><strong>Profesional:</strong> {{ service.professional.get_full_name|default:service.professional.username }}</div>
+                <div class="mb-2"><strong>Precio:</strong> {{ service.price_from }} €</div>
+                <div class="mb-2"><strong>Tipo:</strong> {{ service.get_listing_type_display }}</div>
+                <div class="d-flex flex-column gap-2">
+                  <a class="btn btn-sm btn-primary" href="{% url 'services:service_detail' service.pk %}">Ver detalle</a>
+                  <form method="post" action="{% url 'users:admin_service_delete' service.pk %}" onsubmit="return confirm('¿Borrar anuncio?');">{% csrf_token %}
+                    <button class="btn btn-sm btn-danger w-100" type="submit">Borrar</button>
+                  </form>
+                </div>
+              </div>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center py-3">No hay anuncios.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.kpi-clickable').forEach(function(element) {
+  element.addEventListener('click', function() {
+    const href = this.getAttribute('data-href');
+    if (href) {
+      window.location.href = href;
+    }
+  });
+});
+</script>
+{% endblock %}

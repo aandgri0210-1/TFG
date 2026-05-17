@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Borrar anuncio | MotoMarket{% endblock %}
+{% block content %}
+<section class="service-detail-shell">
+  <div class="card-glass p-4 p-lg-5 mx-auto service-confirm-card">
+    <span class="eyebrow">Confirmar borrado</span>
+    <h1 class="display-title mb-3">Borrar anuncio</h1>
+    <p class="section-lead mb-4">Vas a eliminar permanentemente el anuncio <strong>{{ service.title }}</strong>. Esta acción no se puede deshacer.</p>
+
+    <div class="card-glass p-3 mb-4">
+      <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+        <div>
+          <p class="mb-1"><strong>{{ service.title }}</strong></p>
+          <p class="mb-1 text-muted">{{ service.city }}</p>
+          <p class="mb-0 text-muted">{{ service.get_listing_type_display }}</p>
+        </div>
+        <strong>{{ service.price_from }} €</strong>
+      </div>
+    </div>
+
+    <div class="d-flex gap-2 flex-wrap">
+      <form method="post" action="{% url 'services:service_delete' service.pk %}">
+        {% csrf_token %}
+        <button class="btn btn-danger" type="submit">Sí, borrar anuncio</button>
+      </form>
+      <a class="btn btn-outline-light" href="{% url 'services:service_detail' service.pk %}">Cancelar</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

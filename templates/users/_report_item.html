@@ -1,0 +1,69 @@
+<article class="report-item card-glass mb-3 p-4">
+  <div class="d-flex align-items-start gap-3">
+    <div class="report-index text-center flex-shrink-0">
+      <div class="index-circle">#{{ report.pk }}</div>
+    </div>
+    <div class="flex-grow-1">
+      <div class="mb-2 d-flex align-items-center gap-2">
+        {% if object_type == 'service' %}
+          {% if report.service.is_active == False %}
+          <span class="badge text-bg-warning">Eliminado</span>
+          {% endif %}
+        {% else %}
+          {% if report.review.is_deleted %}
+          <span class="badge text-bg-warning">Eliminado</span>
+          {% endif %}
+        {% endif %}
+        {% if report.is_resolved %}
+        <span class="badge text-bg-success">Resuelto</span>
+        {% else %}
+        <span class="badge text-bg-danger">Pendiente</span>
+        {% endif %}
+      </div>
+      <h3 class="h5 mb-1 report-title">
+        {% if object_type == 'service' %}
+          {{ report.service.title|default:'Sin título' }}
+        {% else %}
+          {{ report.review.title|default:'Sin título' }}
+        {% endif %}
+      </h3>
+      <p class="text-muted small mb-1">
+        <strong>Reportero:</strong> {{ report.reporter.get_full_name|default:report.reporter.username }} (@{{ report.reporter.username }})
+      </p>
+      <p class="text-muted small mb-1">
+        <strong>Motivo:</strong> <span class="badge text-bg-warning">{{ report.get_reason_display }}</span>
+      </p>
+      <p class="text-muted small mb-0">
+        <strong>Fecha:</strong> {{ report.created_at|date:"d/m/Y H:i" }}
+      </p>
+    </div>
+    <div class="report-actions flex-shrink-0 ms-auto">
+      {% if object_type == 'service' %}
+      <a class="btn btn-report" href="{% url 'services:service_detail' report.service.pk %}">Ver anuncio</a>
+      {% else %}
+      <button class="btn btn-report" type="button" data-bs-toggle="modal" data-bs-target="#reportModal{{ report.pk }}">Ver reporte</button>
+      {% endif %}
+      {% if not report.is_resolved %}
+        {% if object_type == 'service' %}
+          {% if report.service.is_active %}
+          <form method="post" action="{% url 'users:admin_service_report_delete_service' report.pk %}" class="d-inline mt-2">{% csrf_token %}
+            <button class="btn btn-outline-danger btn-sm" type="submit">Eliminar anuncio</button>
+          </form>
+          {% endif %}
+          <form method="post" action="{% url 'users:admin_service_report_resolve' report.pk %}" class="d-inline mt-2">{% csrf_token %}
+            <button class="btn btn-outline-success btn-sm" type="submit">Marcar resuelto</button>
+          </form>
+        {% else %}
+          {% if not report.review.is_deleted %}
+          <form method="post" action="{% url 'users:admin_report_delete_review' report.pk %}" class="d-inline mt-2">{% csrf_token %}
+            <button class="btn btn-outline-danger btn-sm" type="submit">Eliminar reseña</button>
+          </form>
+          {% endif %}
+          <form method="post" action="{% url 'users:admin_report_resolve' report.pk %}" class="d-inline mt-2">{% csrf_token %}
+            <button class="btn btn-outline-success btn-sm" type="submit">Marcar resuelto</button>
+          </form>
+        {% endif %}
+      {% endif %}
+    </div>
+  </div>
+</article>

@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% load l10n %}
+{% block title %}Valorar servicio | MotoMarket{% endblock %}
+{% block content %}
+<div class="section-header mb-4">
+  <span class="eyebrow">Valoraciones</span>
+  <h1 class="section-title">Valorar {{ service.title }}</h1>
+</div>
+<div class="card-glass p-4">
+  <form method="post" class="row g-3" novalidate>
+    {% csrf_token %}
+    
+    {% if form.non_field_errors %}
+    <div class="col-12">
+      <div class="alert alert-danger" role="alert">
+        {{ form.non_field_errors }}
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="col-12">
+      <label class="form-label" for="id_title">{{ form.title.label }}</label>
+      {{ form.title }}
+      {% if form.title.errors %}
+      <div class="invalid-feedback d-block mt-2" role="alert">
+        {% for error in form.title.errors %}
+          <span>{{ error }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    
+    <div class="col-12">
+      <fieldset class="rating-widget" data-rating-widget>
+        <legend class="form-label">Puntuación</legend>
+        <p class="rating-helper mb-3">Elige una puntuación de 1 a 5 en pasos de 0.5.</p>
+        <div class="rating-stars" role="radiogroup" aria-label="Puntuación" data-position-aware>
+          {% for value, label in form.rating.field.choices %}
+          <input
+            class="rating-input"
+            type="radio"
+            name="rating"
+            id="rating-{{ forloop.counter }}"
+            value="{{ value|unlocalize }}"
+            {% if form.rating.value|stringformat:'s' == value|stringformat:'s' %}checked="checked"{% endif %}
+            required
+          >
+          {% endfor %}
+          {% for star_num in "12345" %}
+          <button
+            type="button"
+            class="rating-star"
+            data-star-index="{{ forloop.counter }}"
+            aria-label="Seleccionar {{ forloop.counter }} estrellas"
+          >
+            <span class="rating-star-icon">★</span>
+          </button>
+          {% endfor %}
+        </div>
+        <div class="rating-meta mt-3">
+          <span class="rating-value" data-rating-display>0/5</span>
+          <span class="rating-note" data-rating-note>Selecciona una puntuación</span>
+        </div>
+        {% if form.rating.errors %}
+        <div class="invalid-feedback d-block mt-2" role="alert">
+          {% for error in form.rating.errors %}
+            <span>{{ error }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </fieldset>
+    </div>
+    
+    <div class="col-12">
+      <label class="form-label" for="id_comment">{{ form.comment.label }}</label>
+      {{ form.comment }}
+      {% if form.comment.help_text %}
+        <small class="form-text text-muted d-block mt-1">{{ form.comment.help_text|safe }}</small>
+      {% endif %}
+      {% if form.comment.errors %}
+      <div class="invalid-feedback d-block mt-2" role="alert">
+        {% for error in form.comment.errors %}
+          <span>{{ error }}</span>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    
+    <div class="col-12 d-flex gap-2">
+      <button class="btn btn-primary" type="submit">Guardar valoración</button>
+      <a class="btn btn-outline-light" href="{% url 'services:service_detail' service.pk %}">Volver</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,319 @@
+{% extends 'base.html' %}
+{% load l10n %}
+{% block title %}{{ service.title }} | MotoMarket{% endblock %}
+{% block content %}
+<section class="service-detail-shell">
+  <header class="card-glass service-hero p-4 p-lg-5 mb-4">
+    <div class="service-hero-copy">
+      <span class="eyebrow">{{ service.category.name }}</span>
+      <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+        <div class="flex-grow-1">
+          <h1 class="display-title mb-2">{{ service.title }}</h1>
+          <div class="mb-2">
+            <span class="badge text-bg-info">{{ service.get_listing_type_display }}</span>
+          </div>
+          <p class="section-lead">{{ service.city }}</p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+          {% if user.is_authenticated and user == service.professional %}
+          <a class="btn btn-sm btn-outline-light" href="{% url 'services:service_edit' service.pk %}">Editar anuncio</a>
+          <a class="btn btn-sm btn-danger" href="{% url 'services:service_delete' service.pk %}">Borrar anuncio</a>
+          {% endif %}
+          {% if user.is_authenticated and user != service.professional %}
+          <a class="btn btn-sm btn-outline-danger" href="{% url 'services:service_report' service.pk %}">Reportar anuncio</a>
+          {% elif not user.is_authenticated %}
+          <a class="btn btn-sm btn-outline-danger" href="{% url 'login' %}?next={% url 'services:service_report' service.pk %}">Reportar anuncio</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="row g-4 align-items-start service-detail-grid">
+    <div class="col-lg-8">
+      <div class="stack-list">
+        <article class="card-glass p-4">
+          {% if service.service_images.all %}
+            {% if service.service_images.count > 1 %}
+            <!-- Manual viewer for multiple images -->
+            <div id="serviceCarousel" class="service-carousel">
+              {% with imgs=service.service_images.all %}
+                {% if imgs %}
+                  <div class="viewer text-center position-relative">
+                    <img id="serviceMainImage" src="{{ imgs.0.image.url }}" alt="Imagen de {{ service.title }}" class="service-detail-image service-detail-image--modal img-fluid rounded">
+                    <button class="btn btn-link position-absolute top-50 start-0 translate-middle-y" type="button" data-carousel-action="prev" aria-label="Anterior">‹</button>
+                    <button class="btn btn-link position-absolute top-50 end-0 translate-middle-y" type="button" data-carousel-action="next" aria-label="Siguiente">›</button>
+                  </div>
+                {% endif %}
+              {% endwith %}
+
+              <!-- Image thumbnails gallery -->
+              <div class="service-image-thumbnails mt-3">
+                <div class="row g-2">
+                  {% for service_image in service.service_images.all %}
+                  <div class="col-4 col-sm-3">
+                    <button class="service-thumbnail{% if forloop.first %} is-active{% endif %}" data-carousel-index="{{ forloop.counter0 }}" type="button" aria-label="Imagen {{ forloop.counter }}">
+                      <img src="{{ service_image.image.url }}" alt="Imagen {{ forloop.counter }}" class="service-thumbnail-img">
+                    </button>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+
+            <script>
+              document.addEventListener('DOMContentLoaded', function () {
+                var carousel = document.getElementById('serviceCarousel');
+                if (!carousel) return;
+
+                var mainImage = document.getElementById('serviceMainImage');
+                var thumbnails = Array.from(carousel.querySelectorAll('.service-thumbnail'));
+                var prevButton = carousel.querySelector('[data-carousel-action="prev"]');
+                var nextButton = carousel.querySelector('[data-carousel-action="next"]');
+                var images = thumbnails.map(function (t) { var i = t.querySelector('img'); return i ? i.getAttribute('src') : ''; });
+                var activeIndex = 0;
+
+                function setActive(index) {
+                  if (!images.length) return;
+                  if (index < 0) index = images.length - 1;
+                  if (index >= images.length) index = 0;
+                  thumbnails.forEach(function (t) { t.classList.remove('is-active'); t.setAttribute('aria-current', 'false'); });
+                  if (thumbnails[index]) { thumbnails[index].classList.add('is-active'); thumbnails[index].setAttribute('aria-current', 'true'); }
+                  if (mainImage) mainImage.src = images[index];
+                  activeIndex = index;
+                }
+
+                thumbnails.forEach(function (thumbnail) {
+                  function onClickThumb(e) {
+                    e.preventDefault();
+                    var slideIndex = parseInt(thumbnail.getAttribute('data-carousel-index'), 10);
+                    if (!Number.isNaN(slideIndex)) setActive(slideIndex);
+                  }
+                  thumbnail.addEventListener('click', onClickThumb);
+                  var innerImg = thumbnail.querySelector('img');
+                  if (innerImg) innerImg.addEventListener('click', onClickThumb);
+                });
+
+                // open modal when clicking the main image
+                if (mainImage) {
+                  mainImage.style.cursor = 'zoom-in';
+                  mainImage.addEventListener('click', function () {
+                    try {
+                      var modalEl = document.getElementById('serviceImageModal');
+                      if (modalEl) {
+                        var modalImg = modalEl.querySelector('.modal-image');
+                        if (modalImg) {
+                          modalImg.src = mainImage.src;
+                          var modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+                          modalInstance.show();
+                        }
+                      }
+                    } catch (err) {}
+                  });
+                }
+
+                if (prevButton) prevButton.addEventListener('click', function (e) { e.preventDefault(); setActive(activeIndex - 1); });
+                if (nextButton) nextButton.addEventListener('click', function (e) { e.preventDefault(); setActive(activeIndex + 1); });
+
+                setActive(activeIndex);
+              });
+            </script>
+
+            <!-- Modal / Lightbox -->
+            <div class="modal fade" id="serviceImageModal" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content bg-transparent border-0 shadow-none">
+                  <div class="modal-body p-0 d-flex justify-content-center align-items-center">
+                    <button type="button" class="btn-close position-absolute text-white modal-lightbox-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    <img src="" alt="Imagen grande" class="modal-image service-modal-image img-fluid rounded" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% else %}
+            <!-- Single image -->
+            <img class="service-detail-image" src="{{ service.service_images.first.image.url }}" alt="Imagen de {{ service.title }}">
+            {% endif %}
+          {% elif service.image %}
+          <!-- Fallback to old image field -->
+          <img class="service-detail-image" src="{{ service.image.url }}" alt="Imagen de {{ service.title }}">
+          {% else %}
+          <div class="service-detail-image service-detail-image--empty"></div>
+          {% endif %}
+        </article>
+
+        <article class="card-glass p-4">
+          <div class="mb-3">
+            <span class="text-muted d-block small mb-2">Precio desde</span>
+            <p class="mb-0"><strong>{{ service.price_from }} €</strong></p>
+          </div>
+          <hr class="divider-soft">
+          
+          {% if service.listing_type|lower == "vender vehiculo" %}
+          <!-- Vehicle specifications table -->
+          <div class="service-specs mb-4">
+            <h3 class="h6 mb-3">Especificaciones del vehículo</h3>
+            <table class="specs-table w-100">
+              <tr>
+                <td class="specs-label">Cilindrada</td>
+                <td class="specs-value">{% if service.cilindrada %}{{ service.cilindrada }} cc{% else %}No especificado{% endif %}</td>
+              </tr>
+              <tr>
+                <td class="specs-label">Kilómetros</td>
+                <td class="specs-value">{% if service.kilometros %}{{ service.kilometros|stringformat:"d" }} km{% else %}No especificado{% endif %}</td>
+              </tr>
+              <tr>
+                <td class="specs-label">Año</td>
+                <td class="specs-value">{% if service.year %}{{ service.year }}{% else %}No especificado{% endif %}</td>
+              </tr>
+            </table>
+          </div>
+          <hr class="divider-soft">
+          {% endif %}
+          
+          <p class="mb-0 service-description">{{ service.description|linebreaksbr }}</p>
+        </article>
+
+        <article class="card-glass p-4">
+          <div class="d-flex align-items-center gap-3 mb-3">
+                <span class="avatar-circle avatar-circle--sm">
+                  {% if service.professional.profile.avatar %}
+                  <img src="{{ service.professional.profile.avatar.url }}" alt="Avatar de {{ service.professional.get_full_name|default:service.professional.username }}">
+                  {% elif service.professional.profile.avatar_url %}
+                  <img src="{{ service.professional.profile.avatar_url }}" alt="Avatar de {{ service.professional.get_full_name|default:service.professional.username }}">
+                  {% else %}
+                  <span>{{ service.professional.username|slice:":1"|upper }}</span>
+                  {% endif %}
+                </span>
+            <div class="flex-grow-1">
+              <p class="mb-0"><strong>{{ service.professional.get_full_name|default:service.professional.username }}</strong></p>
+              <small class="text-muted">Profesional</small>
+            </div>
+            {% if user.is_authenticated and user != service.professional %}
+            <a class="btn btn-primary btn-sm" href="{% url 'requests_app:request_create' service.pk %}">Solicitar servicio</a>
+            {% elif not user.is_authenticated %}
+            <a class="btn btn-primary btn-sm" href="{% url 'login' %}?next={% url 'services:service_detail' service.pk %}">Solicitar servicio</a>
+            {% endif %}
+          </div>
+        </article>
+
+        <article class="card-glass p-4">
+          <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-3">
+            <div>
+              <span class="eyebrow">Opiniones</span>
+              <h2 class="h4 mb-0">Reseñas</h2>
+            </div>
+            {% if user.is_authenticated and user != service.professional %}
+            <a class="btn btn-sm btn-outline-light" href="{% url 'reviews:review_create' service.pk %}">{% if user_review %}Editar reseña{% else %}Escribir reseña{% endif %}</a>
+            {% elif not user.is_authenticated %}
+            <a class="btn btn-sm btn-outline-light" href="{% url 'login' %}?next={% url 'reviews:review_create' service.pk %}">Escribir reseña</a>
+            {% endif %}
+          </div>
+          <div class="mb-3 pb-3 border-bottom">
+            {% if review_count == 0 %}
+            <p class="mb-0 text-muted">Sin reseñas</p>
+            {% else %}
+            <p class="mb-0"><strong>{{ average_rating|floatformat:1 }}/5</strong> <span class="text-muted">({{ review_count }} {% if review_count == 1 %}reseña{% else %}reseñas{% endif %})</span></p>
+            {% endif %}
+          </div>
+          <div class="stack-list">
+            {% for review in reviews %}
+            {% if not review.is_deleted %}
+            <article class="review-item">
+              <div class="d-flex justify-content-between gap-3 flex-wrap">
+                <strong>{{ review.title|default:'Sin título' }}</strong>
+                <span class="badge text-bg-warning">{{ review.rating }}/5</span>
+              </div>
+              <p class="mb-0 mt-2 text-muted">{{ review.comment|default:'Sin comentario' }}</p>
+              <small class="d-block mt-2 text-muted">{{ review.reviewer.get_full_name|default:review.reviewer.username }}</small>
+              <div class="d-flex gap-2 flex-wrap mt-3">
+                {% if user.is_authenticated and user.is_admin_account and review.comment %}
+                <form method="post" action="{% url 'users:admin_review_comment_clear' review.pk %}" class="d-inline" onsubmit="return confirm('¿Eliminar el comentario de esta reseña?');">
+                  {% csrf_token %}
+                  <button class="btn btn-sm btn-outline-light" type="submit">Borrar reseña</button>
+                </form>
+                {% endif %}
+                {% if user.is_authenticated and user != review.reviewer %}
+                <a class="btn btn-sm btn-outline-danger" href="{% url 'reviews:report_review' review.pk %}">Reportar</a>
+                {% elif not user.is_authenticated %}
+                <a class="btn btn-sm btn-outline-danger" href="{% url 'login' %}?next={% url 'reviews:report_review' review.pk %}">Reportar</a>
+                {% endif %}
+              </div>
+            </article>
+            {% endif %}
+            {% endfor %}
+          </div>
+        </article>
+      </div>
+    </div>
+
+    <aside class="col-lg-4">
+      <div class="card-glass p-4 service-sidebar sticky-lg-top">
+        <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
+          <div>
+            <span class="eyebrow">Ubicación</span>
+            <h2 class="h4 mb-0">Mapa</h2>
+          </div>
+        </div>
+
+        {% if map_location %}
+        <div id="geo-map" class="geo-map service-map" data-lat="{{ map_location.latitude|unlocalize }}" data-lon="{{ map_location.longitude|unlocalize }}" data-title="{{ service.title|escapejs }}"></div>
+        <div class="mt-3 pt-3 border-top">
+          <p class="mb-0 text-muted small">{{ map_location.label }}</p>
+        </div>
+        {% else %}
+        <div class="map-empty">
+          <p class="mb-0 text-muted">No se pudo cargar la ubicación de este anuncio.</p>
+        </div>
+        {% endif %}
+      </div>
+    </aside>
+  </div>
+</section>
+
+{# static image provided by Geoapify; no JS SDK required #}
+{% if map_location %}
+<!-- Leaflet + Geoapify interactive map -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const el = document.getElementById('geo-map');
+    if (!el) return;
+    const lat = parseFloat(el.dataset.lat);
+    const lon = parseFloat(el.dataset.lon);
+    const apiKey = '{{ geoapify_api_key|escapejs }}';
+    if (isNaN(lat) || isNaN(lon)) return;
+
+    console.log('Geo map debug:', {
+      title: el.dataset.title || '',
+      city: '{{ service.city|escapejs }}',
+      address: '{{ service.address|escapejs }}',
+      label: '{{ map_location.label|escapejs }}',
+      latitude: lat,
+      longitude: lon,
+    });
+
+    const map = L.map('geo-map').setView([lat, lon], 11);
+
+    const tileUrl = `https://maps.geoapify.com/v1/tile/osm-carto/{z}/{x}/{y}.png?apiKey=${apiKey}`;
+    const geoLayer = L.tileLayer(tileUrl, {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/">OSM</a> contributors',
+      maxZoom: 19,
+    }).addTo(map);
+
+    geoLayer.on('tileerror', function () {
+      if (!window._geoapify_tile_error) {
+        window._geoapify_tile_error = true;
+        map.removeLayer(geoLayer);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors',
+          maxZoom: 19,
+        }).addTo(map);
+      }
+    });
+
+    L.marker([lat, lon]).addTo(map).bindPopup(el.dataset.title || '').openPopup();
+  });
+</script>
+{% endif %}
+{% endblock %}
