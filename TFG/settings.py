@@ -35,9 +35,13 @@ DEBUG = os.getenv('DJANGO_DEBUG', '0') == '1'
 
 ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
+# Para producción con HTTPS (Certbot)
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if os.getenv('CSRF_TRUSTED_ORIGINS') else []
+if DEBUG is False and CSRF_TRUSTED_ORIGINS:
+    # Añadir origen seguro si está definido
+    pass
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -80,7 +84,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'TFG.wsgi.application'
-
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases

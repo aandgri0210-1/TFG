@@ -6,6 +6,13 @@ services:
     environment:
       DJANGO_DEBUG: "${DJANGO_DEBUG:-1}"
       DB_ENGINE: "${DB_ENGINE:-postgresql}"
+      # Variables para que Django se conecte a PostgreSQL
+      DB_NAME: "${POSTGRES_DB}"
+      DB_USER: "${POSTGRES_USER}"
+      DB_PASSWORD: "${POSTGRES_PASSWORD}"
+      DB_HOST: postgres
+      DB_PORT: "${POSTGRES_PORT:-5432}"
+      # También mantenemos las originales por si acaso
       POSTGRES_DB: "${POSTGRES_DB}"
       POSTGRES_USER: "${POSTGRES_USER}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
@@ -44,10 +51,12 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
-      timeout: 10s
-      retries: 5
+      # Verifica que la base de datos específica esté aceptando conexiones
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
+      timeout: 5s
+      retries: 10   # Aumentamos reintentos para dar tiempo a la inicialización
+      start_period: 10s  # Espera 10s antes de empezar los chequeos
 
 volumes:
   static_volume:
