@@ -173,7 +173,10 @@ if not GEOAPIFY_API_KEY and DEBUG:
 
 if not DEBUG:
     # Production security settings
-    SECURE_SSL_REDIRECT = os.getenv('DJANGO_SECURE_SSL_REDIRECT', '1') == '1'
+    # Nginx ya maneja la redirección HTTP → HTTPS, así que deshabilitamos esto
+    SECURE_SSL_REDIRECT = False
+    # Confiar en headers de proxy para cookies seguras
+    SECURE_PROXY_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
